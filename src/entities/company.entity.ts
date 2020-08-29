@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Transaction } from './transaction.entity';
+import { TransactionEntity } from './transaction.entity';
 
 @Entity()
-export class Company {
+export class CompanyEntity {
   @PrimaryGeneratedColumn('uuid')
   id: number;
 
@@ -13,8 +13,8 @@ export class Company {
   symbol: string;
 
   @OneToMany(
-    type => Transaction,
+    type => TransactionEntity,
     transaction => transaction.company,
   )
-  transactions: Transaction[];
+  transactions: TransactionEntity[];
 }

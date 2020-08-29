@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Company } from './company.entity';
+import { CompanyEntity } from './company.entity';
 
 @Entity()
-export class Transaction {
+export class TransactionEntity {
   @PrimaryGeneratedColumn('uuid')
   id: number;
 
@@ -10,8 +10,8 @@ export class Transaction {
   amount: number;
 
   @ManyToOne(
-    type => Company,
+    type => CompanyEntity,
     company => company.transactions,
   )
-  company: Company;
+  company: CompanyEntity;
 }
