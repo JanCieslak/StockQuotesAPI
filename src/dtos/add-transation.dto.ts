@@ -1,4 +1,11 @@
-import { IsString, ValidateNested, IsInt, IsNumber } from 'class-validator';
+import {
+  IsString,
+  ValidateNested,
+  IsInt,
+  IsArray,
+  IsObject,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CompanyDto {
   @IsString()
@@ -10,9 +17,17 @@ export class CompanyDto {
 
 export class TransactionDto {
   @ValidateNested()
+  @IsObject()
+  @Type(() => CompanyDto)
   readonly company: CompanyDto;
 
   @IsInt()
-  @IsNumber()
   readonly amount: number;
+}
+
+export class TransactionsDto {
+  @ValidateNested({ each: true })
+  @IsArray()
+  @Type(() => TransactionDto)
+  transactions: TransactionDto[];
 }

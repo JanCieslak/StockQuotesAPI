@@ -1,25 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { TransactionDto } from 'src/dtos/add-transation.dto';
+import { TransactionDto, TransactionsDto } from 'src/dtos/add-transation.dto';
 import { TransactionEntity } from 'src/entities/transaction.entity';
 import { Connection } from 'typeorm';
 import { CompanyEntity } from 'src/entities/company.entity';
+import { validate } from 'class-validator';
 
 @Injectable()
 export class TransactionsService {
   constructor(private readonly connection: Connection) {}
 
-  async addTransactions(transactionsDto: TransactionDto[]) {
+  async addTransactions(transactionsDto: TransactionsDto) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction('SERIALIZABLE');
 
     try {
-      for (const transactionDto of transactionsDto) {
-        // const errors = await validate(transactionDto);
-        // if (errors.length > 0) {
-        //   throw Error(`validation errors: ${errors}`);
-        // }
-
+      for (const transactionDto of transactionsDto.transactions) {
         // check if company exists
         let company = await queryRunner.manager
           .getRepository(CompanyEntity)
@@ -47,8 +43,6 @@ export class TransactionsService {
             amount: transactionDto.amount,
           },
         );
-
-        console.log(newTransaction);
 
         await queryRunner.manager.save(newTransaction);
       }
