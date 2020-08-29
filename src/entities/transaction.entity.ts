@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { CompanyEntity } from './company.entity';
 
-@Entity()
+@Entity('transaction')
 export class TransactionEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column('money')
   amount: number;
