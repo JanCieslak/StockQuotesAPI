@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TransactionDto, TransactionsDto } from 'src/dtos/add-transation.dto';
+import { TransactionDto } from 'src/dtos/add-transation.dto';
 import { TransactionEntity } from 'src/entities/transaction.entity';
 import { Connection } from 'typeorm';
 import { CompanyEntity } from 'src/entities/company.entity';
@@ -9,17 +9,17 @@ import { validate } from 'class-validator';
 export class TransactionsService {
   constructor(private readonly connection: Connection) {}
 
-  async addTransactions(transactionsDto: TransactionsDto) {
+  async addTransactions(transactionsDto: TransactionDto[]) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction('SERIALIZABLE');
 
+    const companyRepo = queryRunner.manager.getRepository(CompanyEntity);
+
     try {
-      for (const transactionDto of transactionsDto.transactions) {
+      for (const transactionDto of transactionsDto) {
         // check if company exists
-        let company = await queryRunner.manager
-          .getRepository(CompanyEntity)
-          .findOne(transactionDto.company);
+        let company = await companyRepo.findOne(transactionDto.company);
 
         // if not create a new one
         if (!company) {
@@ -31,9 +31,7 @@ export class TransactionsService {
           await queryRunner.manager.save(newCompany);
         }
 
-        company = await queryRunner.manager
-          .getRepository(CompanyEntity)
-          .findOne(transactionDto.company);
+        company = await companyRepo.findOne(transactionDto.company);
 
         // create and save new transaction
         const newTransaction = await queryRunner.manager.create(
