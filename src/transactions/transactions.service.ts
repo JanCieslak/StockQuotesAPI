@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { TransactionDto } from 'src/dtos/add-transation.dto';
-import { TransactionEntity } from 'src/entities/transaction.entity';
+import { TransactionDto } from '../dtos/add-transation.dto';
 import { Connection } from 'typeorm';
-import { CompanyEntity } from 'src/entities/company.entity';
-import { validate } from 'class-validator';
+import { CompanyEntity } from '../entities/company.entity';
+import { TransactionEntity } from '../entities/transaction.entity';
 
 @Injectable()
 export class TransactionsService {

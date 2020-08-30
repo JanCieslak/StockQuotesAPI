@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 // import { TransactionsDto } from 'src/dtos/add-transation.dto';
 import { TransactionsService } from './transactions.service';
-import { TransactionDto } from 'src/dtos/add-transation.dto';
+import { TransactionDto } from '../dtos/add-transation.dto';
 
 @Controller('transactions')
 export class TransactionsController {
