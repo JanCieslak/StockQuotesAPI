@@ -12,6 +12,7 @@ export class TransactionEntity {
   @ManyToOne(
     type => CompanyEntity,
     company => company.transactions,
+    { onDelete: 'CASCADE' },
   )
   company: CompanyEntity;
 }
