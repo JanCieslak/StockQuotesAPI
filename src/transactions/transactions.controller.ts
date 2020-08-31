@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { CompanyDto, TransactionDto } from '../dtos/add-transation.dto';
+import { CompanyDto } from '../dtos/add-transation.dto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 
 @Controller('transactions')
