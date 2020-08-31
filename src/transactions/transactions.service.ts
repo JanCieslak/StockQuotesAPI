@@ -38,6 +38,7 @@ export class TransactionsService {
           {
             company: company,
             amount: transactionDto.amount,
+            date: transactionDto.date,
           },
         );
 

@@ -1,8 +1,12 @@
+import 'dotenv/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CompanyEntity } from '../entities/company.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
 import { Connection, createConnection, Repository } from 'typeorm';
 import { TransactionsService } from './transactions.service';
+import * as alphavantage from 'alphavantage';
+import * as stocks from 'stock-ticker-symbol';
+import { TransactionDto } from 'src/dtos/add-transation.dto';
 
 const mockConnection = async () => {
   return await createConnection({
@@ -68,8 +72,16 @@ describe('TransactionsService', () => {
   it('should add valid transaction to the database', async () => {
     const companyName = 'TEST_COMPANY_NAME';
     const companySymbol = 'TEST_COMPANY_SYMBOL';
-
-    const validRequest = `[ { "company": { "name": "${companyName}", "symbol": "${companySymbol}" }, "amount": 2200 } ]`;
+    const validRequest: TransactionDto[] = [
+      {
+        company: {
+          name: companyName,
+          symbol: companySymbol,
+        },
+        amount: 2200,
+        date: new Date(),
+      },
+    ];
 
     const falsyResult = await companyRepo.findOne({
       name: companyName,
@@ -77,7 +89,7 @@ describe('TransactionsService', () => {
     });
     expect(falsyResult).toBeFalsy();
 
-    await service.addTransactions(JSON.parse(validRequest));
+    await service.addTransactions(validRequest);
 
     const truthlyResult = await companyRepo.findOne({
       name: companyName,
@@ -86,7 +98,34 @@ describe('TransactionsService', () => {
     expect(truthlyResult).toBeTruthy();
   });
 
-  it('should handle concurrent requests', () => {
-    
-  });
+  it('should handle concurrent requests', async () => {
+    // OK get some data
+    // OK to 2 objects
+    // add them with addTransactions simultaneously
+    // check if data from both objects is valid and
+    // if there is every record in there
+    const alpha = alphavantage({ key: process.env.alpha_vintage_key });
+
+    let companySymbols1 = ['TSLA', 'MSFT'];
+    // let companySymbols2 = ['AAPL', 'AMZN'];
+
+    const companies1 = await createCompanies(companySymbols1, alpha);
+    // const companies2 = await createCompanies(companySymbols2, alpha);
+
+    console.log(await companies1[0].name);
+    // console.log(companyData1[0]['Time Series (1min)']);
+  }, 30_000);
+
+  async function createCompanies(symbols: string[], alpha: any) {
+    const companies = [];
+    for (const symbol of symbols) {
+      const data = await alpha.data.intraday(symbol, 'compact');
+      companies.push({
+        name: await stocks.lookup(symbol),
+        symbol: symbol,
+        data: data,
+      });
+    }
+    return companies;
+  }
 });
