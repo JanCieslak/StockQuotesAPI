@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { TransactionDto } from '../dtos/add-transation.dto';
+import { CompanyDto, TransactionDto } from '../dtos/add-transation.dto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 
 @Controller('transactions')
@@ -11,12 +11,12 @@ export class TransactionsController {
     status: 201,
     description: 'Transactions added to the database',
   })
-  @ApiBody({ type: [TransactionDto] })
+  @ApiBody({ type: [CompanyDto] })
   @Post()
   async addTransactions(
     @Body()
-    transactions: TransactionDto[],
+    companysTransactions: CompanyDto[],
   ) {
-    await this.transactionsService.addTransactions(transactions);
+    await this.transactionsService.addTransactions(companysTransactions);
   }
 }

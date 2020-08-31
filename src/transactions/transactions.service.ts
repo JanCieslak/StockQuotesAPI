@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TransactionDto } from '../dtos/add-transation.dto';
+import { CompanyDto, TransactionDto } from '../dtos/add-transation.dto';
 import { Connection } from 'typeorm';
 import { CompanyEntity } from '../entities/company.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
@@ -8,7 +8,7 @@ import { TransactionEntity } from '../entities/transaction.entity';
 export class TransactionsService {
   constructor(private readonly connection: Connection) {}
 
-  async addTransactions(transactionsDto: TransactionDto[]) {
+  async addTransactions(companyDtos: CompanyDto[]) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction('SERIALIZABLE');
@@ -16,33 +16,37 @@ export class TransactionsService {
     const companyRepo = queryRunner.manager.getRepository(CompanyEntity);
 
     try {
-      for (const transactionDto of transactionsDto) {
+      for (const companyDto of companyDtos) {
+        const { transactions, ...companySearch } = companyDto;
+
         // check if company exists
-        let company = await companyRepo.findOne(transactionDto.company);
+        let company = await companyRepo.findOne(companySearch);
 
         // if not create a new one
         if (!company) {
           const newCompany = await queryRunner.manager.create(
             CompanyEntity,
-            transactionDto.company,
+            companyDto,
           );
 
           await queryRunner.manager.save(newCompany);
         }
 
-        company = await companyRepo.findOne(transactionDto.company);
+        company = await companyRepo.findOne(companySearch);
 
-        // create and save new transaction
-        const newTransaction = await queryRunner.manager.create(
-          TransactionEntity,
-          {
-            company: company,
-            amount: transactionDto.amount,
-            date: transactionDto.date,
-          },
-        );
+        for (const transactionDto of companyDto.transactions) {
+          // create and save new transaction
+          const newTransaction = await queryRunner.manager.create(
+            TransactionEntity,
+            {
+              company: company,
+              amount: transactionDto.amount,
+              date: transactionDto.date,
+            },
+          );
 
-        await queryRunner.manager.save(newTransaction);
+          await queryRunner.manager.save(newTransaction);
+        }
       }
 
       await queryRunner.commitTransaction();
