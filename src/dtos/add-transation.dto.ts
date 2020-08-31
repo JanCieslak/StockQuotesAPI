@@ -4,6 +4,8 @@ import {
   IsArray,
   IsObject,
   IsNumber,
+  IsDate,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -21,13 +23,9 @@ export class TransactionDto {
   @Type(() => CompanyDto)
   readonly company: CompanyDto;
 
+  @IsDateString()
+  readonly date: Date;
+
   @IsNumber()
   readonly amount: number;
 }
-
-// export class TransactionsDto {
-//   @ValidateNested({ each: true })
-//   @IsArray()
-//   @Type(() => TransactionDto)
-//   transactions: TransactionDto[];
-// }

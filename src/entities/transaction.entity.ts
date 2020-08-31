@@ -9,6 +9,9 @@ export class TransactionEntity {
   @Column('money')
   amount: number;
 
+  @Column('date')
+  date: Date;
+
   @ManyToOne(
     type => CompanyEntity,
     company => company.transactions,
