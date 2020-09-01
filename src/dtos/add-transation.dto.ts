@@ -1,17 +1,16 @@
 import {
   IsString,
   ValidateNested,
-  IsObject,
   IsNumber,
-  IsDateString,
   IsArray,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TransactionDto {
   @ApiProperty({ type: Date, description: 'date', example: new Date() })
-  @IsDateString()
+  @IsDate()
   readonly date: Date;
 
   @ApiProperty({ type: Number, description: 'amount', example: 2200 })
