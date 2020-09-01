@@ -6,20 +6,8 @@ import { Connection, createConnection, Repository } from 'typeorm';
 import { TransactionsService } from './transactions.service';
 import * as alphavantage from 'alphavantage';
 import * as stocks from 'stock-ticker-symbol';
-import { TransactionDto } from 'src/dtos/add-transation.dto';
-
-const mockConnection = async () => {
-  return await createConnection({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: process.env.password,
-    database: 'MockStockQuotesDb',
-    entities: [CompanyEntity, TransactionEntity],
-    synchronize: true,
-  });
-};
+import { CompanyDto, TransactionDto } from '../dtos/add-transation.dto';
+import { mockConnection } from '../utils/test-helpers/mock-connection';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
@@ -69,63 +57,98 @@ describe('TransactionsService', () => {
     expect(service).toBeDefined();
   });
 
-  // it('should add valid transaction to the database', async () => {
-  //   const companyName = 'TEST_COMPANY_NAME';
-  //   const companySymbol = 'TEST_COMPANY_SYMBOL';
-  //   const validRequest: TransactionDto[] = [
-  //     {
-  //       company: {
-  //         name: companyName,
-  //         symbol: companySymbol,
-  //       },
-  //       amount: 2200,
-  //       date: new Date(),
-  //     },
-  //   ];
+  it('should add valid transaction to the database', async () => {
+    const companyName = 'TEST_COMPANY_NAME';
+    const companySymbol = 'TEST_COMPANY_SYMBOL';
+    const validRequest: CompanyDto[] = [
+      {
+        name: companyName,
+        symbol: companySymbol,
+        transactions: [
+          {
+            amount: 2000,
+            date: new Date(2020, 4, 22),
+          },
+          {
+            amount: 2200,
+            date: new Date(2018, 6, 25),
+          },
+        ],
+      },
+    ];
 
-  //   const falsyResult = await companyRepo.findOne({
-  //     name: companyName,
-  //     symbol: companySymbol,
-  //   });
-  //   expect(falsyResult).toBeFalsy();
+    const falsyResult = await companyRepo.findOne({
+      name: companyName,
+      symbol: companySymbol,
+    });
+    expect(falsyResult).toBeFalsy();
 
-  //   await service.addTransactions(validRequest);
+    await service.addTransactions(validRequest);
 
-  //   const truthlyResult = await companyRepo.findOne({
-  //     name: companyName,
-  //     symbol: companySymbol,
-  //   });
-  //   expect(truthlyResult).toBeTruthy();
-  // });
+    const truthlyResult = await companyRepo.findOne(
+      {
+        name: companyName,
+        symbol: companySymbol,
+      },
+      { relations: ['transactions'] },
+    );
+    expect(truthlyResult).toBeTruthy();
+    expect(truthlyResult.transactions.length).toBe(2);
+  });
 
-  // it('should handle concurrent requests', async () => {
-  //   // OK get some data
-  //   // OK to 2 objects
-  //   // add them with addTransactions simultaneously
-  //   // check if data from both objects is valid and
-  //   // if there is every record in there
-  //   const alpha = alphavantage({ key: process.env.alpha_vintage_key });
+  it('should handle concurrent requests', async () => {
+    const alpha = alphavantage({ key: process.env.alpha_vintage_key });
 
-  //   let companySymbols1 = ['TSLA', 'MSFT'];
-  //   // let companySymbols2 = ['AAPL', 'AMZN'];
+    const companySymbols = ['TSLA', 'AMZN'];
+    const companyDtos: CompanyDto[] = await createCompanies(
+      companySymbols,
+      alpha,
+    );
 
-  //   const companies1 = await createCompanies(companySymbols1, alpha);
-  //   // const companies2 = await createCompanies(companySymbols2, alpha);
+    await service.addTransactions(companyDtos);
+    await service.addTransactions(companyDtos);
 
-  //   console.log(await companies1[0].name);
-  //   // console.log(companyData1[0]['Time Series (1min)']);
-  // }, 30_000);
+    for (const companyDto of companyDtos) {
+      const companyEntity = await companyRepo.findOne(
+        {
+          name: companyDto.name,
+          symbol: companyDto.symbol,
+        },
+        { relations: ['transactions'] },
+      );
 
-  // async function createCompanies(symbols: string[], alpha: any) {
-  //   const companies = [];
-  //   for (const symbol of symbols) {
-  //     const data = await alpha.data.intraday(symbol, 'compact');
-  //     companies.push({
-  //       name: await stocks.lookup(symbol),
-  //       symbol: symbol,
-  //       data: data,
-  //     });
-  //   }
-  //   return companies;
-  // }
+      expect(companyEntity).toBeTruthy();
+      expect(companyEntity.transactions.length).toBe(200);
+    }
+  });
+
+  /**
+   * @param symbols array of symbols to downolad specific company's stock quotes,
+   * (max 5 requests per minute [this function uses symbols.length requests])
+   *
+   * Downloads stock quotes from alphavantage api
+   */
+  async function createCompanies(symbols: string[], alpha: any) {
+    const companies: CompanyDto[] = [];
+    for (const symbol of symbols) {
+      const data = (await alpha.data.intraday(symbol, 'compact'))[
+        'Time Series (1min)'
+      ];
+
+      const transactions: TransactionDto[] = [];
+      for (const date of Object.keys(data)) {
+        transactions.push({
+          amount: data[date]['4. close'],
+          date: new Date(date),
+        });
+      }
+
+      companies.push({
+        name: await stocks.lookup(symbol),
+        symbol: symbol,
+        transactions: transactions,
+      });
+    }
+    return companies;
+  }
 });
