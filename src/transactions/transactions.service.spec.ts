@@ -66,11 +66,11 @@ describe('TransactionsService', () => {
         symbol: companySymbol,
         transactions: [
           {
-            amount: 2000,
+            value: 2000,
             date: new Date(2020, 4, 22),
           },
           {
-            amount: 2200,
+            value: 2200,
             date: new Date(2018, 6, 25),
           },
         ],
@@ -138,7 +138,7 @@ describe('TransactionsService', () => {
       const transactions: TransactionDto[] = [];
       for (const date of Object.keys(data)) {
         transactions.push({
-          amount: data[date]['4. close'],
+          value: data[date]['4. close'],
           date: new Date(date),
         });
       }

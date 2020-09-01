@@ -13,9 +13,9 @@ export class TransactionDto {
   @IsDate()
   readonly date: Date;
 
-  @ApiProperty({ type: Number, description: 'amount', example: 2200 })
+  @ApiProperty({ type: Number, description: 'value', example: 2200 })
   @IsNumber()
-  readonly amount: number;
+  readonly value: number;
 }
 
 export class CompanyDto {

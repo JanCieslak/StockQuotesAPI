@@ -40,7 +40,7 @@ export class TransactionsService {
             TransactionEntity,
             {
               company: company,
-              amount: transactionDto.amount,
+              value: transactionDto.value,
               date: transactionDto.date,
             },
           );

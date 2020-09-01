@@ -7,7 +7,7 @@ export class TransactionEntity {
   id: string;
 
   @Column('money')
-  amount: number;
+  value: number;
 
   @Column('date')
   date: Date;
