@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CompanyEntity } from '../entities/company.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
-import { Connection, createConnection, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { TransactionsService } from './transactions.service';
 import * as alphavantage from 'alphavantage';
 import * as stocks from 'stock-ticker-symbol';

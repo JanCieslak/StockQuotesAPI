@@ -1,6 +1,6 @@
 import { CompanyEntity } from '../../entities/company.entity';
 import { TransactionEntity } from '../../entities/transaction.entity';
-import { Connection, createConnection } from 'typeorm';
+import { createConnection } from 'typeorm';
 
 export const mockConnection = async () => {
   return await createConnection({

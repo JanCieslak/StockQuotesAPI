@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CompanyDto, TransactionDto } from '../dtos/add-transation.dto';
+import { CompanyDto } from '../dtos/add-transation.dto';
 import { Connection } from 'typeorm';
 import { CompanyEntity } from '../entities/company.entity';
 import { TransactionEntity } from '../entities/transaction.entity';
