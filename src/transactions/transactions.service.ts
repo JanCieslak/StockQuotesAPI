@@ -51,7 +51,12 @@ export class TransactionsService {
 
       await queryRunner.commitTransaction();
     } catch (err) {
-      console.error(err);
+      // console.error(err.toString());
+
+      if (err.toString().includes('could not serialize access')) {
+        await this.addTransactions(companyDtos);
+      }
+
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();

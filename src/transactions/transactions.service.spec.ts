@@ -105,8 +105,10 @@ describe('TransactionsService', () => {
       alpha,
     );
 
-    await service.addTransactions(companyDtos);
-    await service.addTransactions(companyDtos);
+    await Promise.all([
+      service.addTransactions(companyDtos),
+      service.addTransactions(companyDtos),
+    ]);
 
     for (const companyDto of companyDtos) {
       const companyEntity = await companyRepo.findOne(
@@ -120,7 +122,7 @@ describe('TransactionsService', () => {
       expect(companyEntity).toBeTruthy();
       expect(companyEntity.transactions.length).toBe(200);
     }
-  });
+  }, 15_000);
 
   /**
    * @param symbols array of symbols to downolad specific company's stock quotes,
