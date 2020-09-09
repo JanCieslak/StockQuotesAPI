@@ -108,35 +108,32 @@ describe('TransactionsService', () => {
     let shouldThrowError = false;
 
     // transaction collision
-    await Promise.all([
-      service.tryAddTransactions(queryRunner1, companyDto),
-      service.tryAddTransactions(queryRunner2, companyDto),
-    ]).catch(err => {
-      shouldThrowError = true;
-      // console.log(err);
-    });
-
-    expect(shouldThrowError).toBeTruthy();
-
-    await queryRunner1.release();
-    await queryRunner2.release();
+    let results;
+    try {
+      results = await Promise.all([
+        service.tryAddTransactions(queryRunner1, companyDto),
+        service.tryAddTransactions(queryRunner2, companyDto),
+      ]);
+      await queryRunner1.commitTransaction();
+      await queryRunner2.commitTransaction();
+    } catch (err) {
+      if (err.toString().includes('could not serialize access')) {
+        shouldThrowError = true;
+      }
+    } finally {
+      expect(shouldThrowError).toBeTruthy();
+      await queryRunner1.release();
+      await queryRunner2.release();
+    }
   });
 
   it('should handle transaction collisions', async () => {
-    // const alpha = alphavantage({ key: process.env.alpha_vintage_key });
-
-    // const companySymbols = ['TSLA', 'AMZN'];
-    // const companyDtos: CompanyDto[] = await createCompanies(
-    //   companySymbols,
-    //   alpha,
-    // );
-
     await Promise.all([
       service.addTransactions(companyDto),
       service.addTransactions(companyDto),
     ]);
 
-    const companyENtity = await companyRepo.findOne(
+    const companyEntity = await companyRepo.findOne(
       {
         name: companyDto[0].name,
         symbol: companyDto[0].symbol,
@@ -144,24 +141,12 @@ describe('TransactionsService', () => {
       { relations: ['transactions'] },
     );
 
-    expect(companyENtity.transactions.length).toBe(4);
-    // for (const companyDto of companyDtos) {
-    //   const companyEntity = await companyRepo.findOne(
-    //     {
-    //       name: companyDto.name,
-    //       symbol: companyDto.symbol,
-    //     },
-    //     { relations: ['transactions'] },
-    //   );
-
-    //   expect(companyEntity).toBeTruthy();
-    //   expect(companyEntity.transactions.length).toBe(200);
-    // }
-  }, 15_000);
+    expect(companyEntity.transactions.length).toBe(4);
+  });
 
   /**
-   * @param symbols array of symbols to downolad specific company's stock quotes,
-   * (max 5 requests per minute [this function uses symbols.length requests])
+   * @param symbols array of symbols to download specific company's stock quotes,
+   * (max 5 requests per minute [this function uses symbols.length api requests])
    *
    * Downloads stock quotes from alphavantage api
    */
@@ -181,7 +166,7 @@ describe('TransactionsService', () => {
       }
 
       companies.push({
-        name: await stocks.lookup(symbol),
+        name: stocks.lookup(symbol),
         symbol: symbol,
         transactions: transactions,
       });

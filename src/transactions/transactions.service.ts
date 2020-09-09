@@ -15,8 +15,9 @@ export class TransactionsService {
 
     try {
       await this.tryAddTransactions(queryRunner, companyDtos);
+      await queryRunner.commitTransaction();
     } catch (err) {
-      console.error(err.toString());
+      // console.error(err.toString());
 
       if (err.toString().includes('could not serialize access')) {
         await this.addTransactions(companyDtos);
@@ -42,7 +43,7 @@ export class TransactionsService {
 
       // if not create a new one
       if (!company) {
-        const newCompany = await queryRunner.manager.create(
+        const newCompany = queryRunner.manager.create(
           CompanyEntity,
           companyDto,
         );
@@ -54,19 +55,14 @@ export class TransactionsService {
 
       for (const transactionDto of companyDto.transactions) {
         // create and save new transaction
-        const newTransaction = await queryRunner.manager.create(
-          TransactionEntity,
-          {
-            company: company,
-            value: transactionDto.value,
-            date: transactionDto.date,
-          },
-        );
+        const newTransaction = queryRunner.manager.create(TransactionEntity, {
+          company: company,
+          value: transactionDto.value,
+          date: transactionDto.date,
+        });
 
         await queryRunner.manager.save(newTransaction);
       }
     }
-
-    await queryRunner.commitTransaction();
   }
 }
